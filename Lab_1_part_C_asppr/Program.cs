@@ -2,6 +2,7 @@
 
 int choice = 0;
 Matrix optimalMatrix = null;
+Matrix withoutZeros = null;
 
 void ShowMatrix(Matrix matrix)
 {
@@ -142,23 +143,33 @@ void SwapHeaders(Matrix matrix, int r, int s)
 
 string GetResultX(Matrix matrix)
 {
-    int n = matrix.Columns - 1;
-    double[] xValues = new double[n];
+    int maxIndex = 0;
+    var allHeaders = matrix.RowHeaders.Concat(matrix.ColumnHeaders);
+
+    foreach (var header in allHeaders)
+    {
+        if (header.StartsWith("x"))
+        {
+            if (int.TryParse(header.Substring(1), out int index))
+            {
+                if (index > maxIndex) maxIndex = index;
+            }
+        }
+    }
+
+    if (maxIndex == 0) return "X = ()";
+
+    double[] xValues = new double[maxIndex];
 
     for (int i = 0; i < matrix.Rows - 1; i++)
     {
         string header = matrix.RowHeaders[i];
 
-        if (header.Contains("x"))
+        if (header.StartsWith("x"))
         {
-            string indexStr = header.Replace("x", "").Trim();
-
-            if (int.TryParse(indexStr, out int index))
+            if (int.TryParse(header.Substring(1), out int index))
             {
-                if (index >= 1 && index <= n)
-                {
-                    xValues[index - 1] = matrix[i, matrix.Columns - 1];
-                }
+                xValues[index - 1] = matrix[i, matrix.Columns - 1];
             }
         }
     }
@@ -250,7 +261,7 @@ int FindNegativeInZRow(Matrix matrix)
     return -1;
 }
 
-void DeleteZeroRows()
+Matrix DeleteZeroRows()
 {
     ModifiedMatrixCalculator eliminator = new ModifiedMatrixCalculator();
     Matrix matrix = InputManager.InputMatrix();
@@ -270,7 +281,7 @@ void DeleteZeroRows()
         else
         {
             Console.WriteLine($"Помилка! '{parts[i]}' не є числом. Спробуйте ще раз.");
-            return;
+            return null;
         }
     }
 
@@ -279,7 +290,7 @@ void DeleteZeroRows()
         if (zeroRows[i] < 0 || zeroRows[i] >= matrix.Rows)
         {
             Console.WriteLine($"Помилка! Рядок {zeroRows[i] + 1} виходить за межi матрицi");
-            return;
+            return null;
         }
 
         if (matrix.RowHeaders[zeroRows[i]] != "Z")
@@ -289,7 +300,7 @@ void DeleteZeroRows()
         else
         {
             Console.WriteLine("Помилка! Неможливо змінити рядок Z.");
-            return;
+            return null;
         }
     }
 
@@ -312,6 +323,8 @@ void DeleteZeroRows()
         Console.WriteLine($"\nПромiжна таблиця: (елемент {matrix.ColumnHeaders[column]}, {matrix.RowHeaders[r]})");
         PrintMatrix(matrix);
     }
+
+    return matrix;
 }
 
 Matrix FindOptimalSolution()
@@ -388,6 +401,49 @@ Matrix FindReferenceSolution()
     }
 
     Console.WriteLine("Опорний розв\'язок знайдено");
+    PrintMatrix(matrix);
+    return matrix;
+}
+
+Matrix InputFindReferenceSolution(Matrix matrix)
+{
+    if (matrix == null) return null;
+
+    ModifiedMatrixCalculator referenceSolution = new ModifiedMatrixCalculator();
+
+    while (IsNegative(matrix))
+    {
+        int targetRow = FindRowWithNegativeB(matrix);
+
+        if (targetRow == -1)
+        {
+            break;
+        }
+
+        int s = FindNegativeInRow(matrix, targetRow);
+
+        if (s == -1)
+        {
+            Console.WriteLine("Система обмежень є суперечливою");
+            return null;
+        }
+
+        int r = MinNotNegative(matrix, s);
+
+        if (r == -1)
+        {
+            Console.WriteLine("Неможливо знайти розв\'язувальний рядок");
+            return null;
+        }
+
+        matrix = referenceSolution.Calculate(matrix, r, s);
+        SwapHeaders(matrix, r, s);
+        Console.WriteLine("\nПромiжна таблиця");
+        PrintMatrix(matrix);
+    }
+
+    Console.WriteLine("Опорний розв\'язок знайдено");
+    PrintMatrix(matrix);
     return matrix;
 }
 
@@ -398,6 +454,15 @@ void ShowReferenceSolution()
     optimalMatrix = referenceSolution;
 
     string X = GetResultX(referenceSolution);
+    Console.WriteLine("\nОпорний розв\'язок:");
+    Console.WriteLine(X);
+}
+
+void InputShowReferenceSolution(Matrix matrix)
+{
+    optimalMatrix = InputFindReferenceSolution(matrix);
+
+    string X = GetResultX(matrix);
     Console.WriteLine("\nОпорний розв\'язок:");
     Console.WriteLine(X);
 }
@@ -459,7 +524,16 @@ while (true)
             ShowOptimalSolution();
             break;
         case 6:
-            DeleteZeroRows();
+            withoutZeros = DeleteZeroRows().Clone();
+            Console.WriteLine("Знайти опорний розв\'язок? (y/n): ");
+            if (Console.ReadLine().Trim().ToLower() == "y")
+            {
+                InputShowReferenceSolution(withoutZeros);
+            }
+            else
+            {
+                Console.WriteLine("Повернення до головного меню.\n");
+            }
             break;
         default:
             Console.WriteLine("Помилка! Введено некоректний вибiр. Спробуйте ще раз.");
