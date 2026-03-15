@@ -14,6 +14,7 @@ namespace Lab_1_part_C_asppr
 
         public string[] RowHeaders { get; set; }
         public string[] ColumnHeaders { get; set; }
+        public double GetMaxZ { get => this[this.Rows - 1, this.Columns - 1]; }
 
         public Matrix(double[,] matrix)
         {
@@ -71,6 +72,22 @@ namespace Lab_1_part_C_asppr
                 ColumnHeaders[j] = "x" + (j + 1);
             }
             ColumnHeaders[Columns - 1] = "1";
+        }
+
+        public void UpdateYHeaders()
+        {
+            int count = 1;
+
+            for (int i = 0; i < Rows - 1; i++)
+            {
+                if (RowHeaders[i] == "0")
+                {
+                    continue;
+                }
+
+                RowHeaders[i] = "y" + count;
+                count++;
+            }
         }
 
         public Matrix FilterColumn(int columnToExclude)

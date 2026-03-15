@@ -16,6 +16,11 @@ void ShowMatrix(Matrix matrix)
     }
 }
 
+void ShowMaxZ(Matrix matrix)
+{
+    Console.WriteLine($"Max (Z) = {matrix.GetMaxZ}");
+}
+
 void ReverseMatrix()
 {
     Matrix matrix = InputManager.InputMatrix();
@@ -304,6 +309,8 @@ Matrix DeleteZeroRows()
         }
     }
 
+    matrix.UpdateYHeaders();
+
     int zeroRowIteration = 0;
 
     while (zeroRows.Count() > zeroRowIteration)
@@ -480,6 +487,7 @@ void ShowOptimalSolution()
         string X = GetResultX(optimalSolution);
         Console.WriteLine("\nОптимальний розв\'язок:");
         Console.WriteLine(X);
+        ShowMaxZ(optimalSolution);
     }
 }
 
@@ -525,6 +533,7 @@ while (true)
             break;
         case 6:
             withoutZeros = DeleteZeroRows().Clone();
+            Console.WriteLine("Початкова таблиця: ");
             Console.WriteLine("Знайти опорний розв\'язок? (y/n): ");
             if (Console.ReadLine().Trim().ToLower() == "y")
             {
