@@ -533,7 +533,6 @@ while (true)
             break;
         case 6:
             withoutZeros = DeleteZeroRows().Clone();
-            Console.WriteLine("Початкова таблиця: ");
             Console.WriteLine("Знайти опорний розв\'язок? (y/n): ");
             if (Console.ReadLine().Trim().ToLower() == "y")
             {
